@@ -24,46 +24,38 @@ public partial class Program
 
     public static int getTotalScoredGoals(string team, int year)
     {
-        int page = 1;
 
-        int totalScoreGoals = 0;
 
-        var resp1 = CallClient(year, team, page);
+        var resp = CallApi(year, team, 1);
+        var totalScoreGoals = 0;
 
-        foreach (var score in resp1.data)
+        for (int i = 1; i <= resp.total_pages; i++)
         {
-            totalScoreGoals += int.Parse(score.team1goals);
+            resp = CallApi(year, team, i);
+
+            foreach (var match in resp.data)
+            {
+                totalScoreGoals += int.Parse(match.team1goals);
+            }
         }
-
-        page = 2;
-
-        var resp2 = CallClient(year, team, page);
-
-        foreach (var score in resp2.data)
-        {
-            totalScoreGoals += int.Parse(score.team1goals);
-        }
-
-        page = 3;
-
-        var resp3 = CallClient(year, team, page);
-
-        foreach (var score in resp3.data)
-        {
-            totalScoreGoals += int.Parse(score.team1goals);
-        }
-
-
-
-
+        
         return totalScoreGoals;
+
     }
 
-    private static Data CallClient(int year, string team, int page)
+    private static Data CallApi(int year, string team, int page)
     {
+        var parameters = new
+        {
+            yearParam = year,
+            team1Param = team,
+            pageParam = page
+        };
+
         var client = new RestClient("https://jsonmock.hackerrank.com/api/football_matches");
-        var request = new RestRequest($"?year={year}&team1={team}&page={page}");
+        var request = new RestRequest($"?year={parameters.yearParam}&team1={parameters.team1Param}&page={parameters.pageParam}");
         var response = client.ExecuteGet(request);
+
 
         var options = new JsonSerializerOptions
         {
@@ -72,8 +64,8 @@ public partial class Program
         };
 
         return JsonSerializer.Deserialize<Data>(response.Content, options);
-
     }
+
 
 
 }
